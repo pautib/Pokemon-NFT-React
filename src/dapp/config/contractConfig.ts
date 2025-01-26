@@ -1,4 +1,5 @@
-import { Contract, JsonRpcSigner } from "ethers";
+import { Contract } from "ethers";
+import { JsonRpcSigner } from "@ethersproject/providers";
 
 export interface ContractProviderContext {
     contract: Contract | null, // A Contract instance.

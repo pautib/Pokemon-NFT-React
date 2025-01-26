@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react"
-import { BrowserProvider, Contract, JsonRpcSigner, InterfaceAbi, BaseContract } from "ethers";
+import { Contract, BaseContract, ContractInterface } from "ethers";
+import { Web3Provider, JsonRpcSigner } from "@ethersproject/providers";
 import { useWalletProvider } from "./useWalletProvider";
 
-export const useSmartContract = <T extends Contract | BaseContract>(contractAddress: string, contractAbi: InterfaceAbi) => {
+export const useSmartContract = <T extends Contract | BaseContract>(contractAddress: string, contractAbi: ContractInterface) => {
     const initErrorMessage = "Please connect your wallet";
 
     const { selectedWallet } = useWalletProvider();
@@ -21,7 +22,7 @@ export const useSmartContract = <T extends Contract | BaseContract>(contractAddr
     const checkContractDeployment = async (contract: Contract) => {
         console.log("Checking contract deployment...");
         try {
-            await contract.waitForDeployment();
+            await contract.deployed();
             return true;
         } catch (error) {
             console.log(error);
@@ -35,31 +36,30 @@ export const useSmartContract = <T extends Contract | BaseContract>(contractAddr
 
         if (selectedWallet) {
 
-            const ethersProvider = new BrowserProvider(selectedWallet.provider);
-            ethersProvider.getSigner()
-            .then((newSigner) => {
-                setSigner(newSigner);
+            const ethersProvider = new Web3Provider(selectedWallet.provider);
+            
+            const ethersSigner = ethersProvider.getSigner()
+            setSigner(ethersSigner);
 
-                const theContract = new Contract(contractAddress, contractAbi, newSigner);
-                setContract(theContract as T);
-                console.log(theContract)
-                return checkContractDeployment(theContract);
-
-            }).then((isDeployed) => {
-                if (isDeployed) {
-                    console.log("Contract is deployed on the selected network.");
-                    clearError();
-                } else {
-                    setContract(null);
-                    setContractError("Contract is not deployed on the selected network.");
-                    console.log("Contract is not deployed on the selected network.");
-                    //throw new Error("Contract is not deployed on the selected network.");
-                }
-            })
-            .catch((e) => {
-                setContractError(e);
-                console.error(e);
-            });
+            const theContract = new Contract(contractAddress, contractAbi, ethersSigner);
+            setContract(theContract as T);
+            console.log(theContract)
+            checkContractDeployment(theContract)
+                .then((isDeployed) => {
+                    if (isDeployed) {
+                        console.log("Contract is deployed on the selected network.");
+                        clearError();
+                    } else {
+                        setContract(null);
+                        setContractError("Contract is not deployed on the selected network.");
+                        console.log("Contract is not deployed on the selected network.");
+                        //throw new Error("Contract is not deployed on the selected network.");
+                    }
+                })
+                .catch((e) => {
+                    setContractError(e);
+                    console.error(e);
+                });
         }
 
     }, [selectedWallet]);

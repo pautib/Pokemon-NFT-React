@@ -14,7 +14,8 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
-    "ethers": "^6.13.5",
+    "@ethersproject/providers": "5.7.2",
+    "ethers": "5.7.2",
     "query-string": "^8.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
